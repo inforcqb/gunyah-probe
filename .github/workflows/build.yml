@@ -1,0 +1,35 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-aarch64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install aarch64 cross toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu
+
+      - name: Build static aarch64 probe
+        run: |
+          aarch64-linux-gnu-gcc -O2 -Wall -Wextra -static \
+            -o gunyah_probe gunyah_probe.c
+
+      - name: Inspect binary
+        run: |
+          file gunyah_probe
+          ls -l gunyah_probe
+          aarch64-linux-gnu-readelf -h gunyah_probe | sed -n '1,20p'
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gunyah_probe-aarch64
+          path: gunyah_probe
+          if-no-files-found: error
