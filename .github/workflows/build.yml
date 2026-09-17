@@ -12,9 +12,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install aarch64 cross toolchain
+        # libc6-dev-arm64-cross is only a *Recommends* of gcc-aarch64-linux-gnu;
+        # without it there is no target sysroot and gcc silently falls back to
+        # the host x86_64 /usr/include headers (features-time64.h/wordsize.h).
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu
+          sudo apt-get install -y --no-install-recommends \
+            gcc-aarch64-linux-gnu libc6-dev-arm64-cross
+          echo "sysroot: $(aarch64-linux-gnu-gcc -print-sysroot)"
+          ls -l /usr/aarch64-linux-gnu/include/errno.h
 
       - name: Build static aarch64 probe
         run: |
